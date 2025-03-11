@@ -29,9 +29,18 @@ export async function POST(request: NextRequest) {
       if (shortDescElement) {
         // Remove specified elements
         shortDescElement.querySelector(".cats-link")?.remove();
+        shortDescElement.querySelector(".product_title .entry-title")?.remove();
         shortDescElement.querySelector(".ts-product-ratings-stock")?.remove();
         shortDescElement.querySelector(".ts-summary-custom-content")?.remove();
         shortDescElement.querySelector("form")?.remove();
+
+        // Clean up empty parent elements
+        const cleanElements = shortDescElement.querySelectorAll(
+          ".woocommerce-product-details__short-description, .woobt-wrap"
+        );
+        cleanElements.forEach((el) => {
+          if (el.innerHTML.trim() === "") el.remove();
+        });
       }
       const short_description = shortDescElement?.innerHTML?.trim();
 
@@ -65,11 +74,6 @@ export async function POST(request: NextRequest) {
         features,
       };
     });
-
-    // Remove "phoneplace" from the title
-    if (data.title) {
-      data.title = data.title.replace(/phoneplace/gi, "").trim();
-    }
 
     await browser.close();
     return NextResponse.json(data);

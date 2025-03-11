@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,43 +24,36 @@ export default function Results({ data: initialData }: ResultsProps) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadResult, setUploadResult] = useState<string | null>(null);
 
-  const removePhoneplace = (str: string) =>
-    str.replace(/phoneplace/gi, "").trim();
-
   const processDescription = (description?: string) => {
     if (!description) return "";
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = description;
 
-    // Remove any remaining unwanted elements
-    const unwantedSelectors = [
-      ".cats-link",
-      ".ts-product-ratings-stock",
-      ".ts-summary-custom-content",
-      "form",
-    ];
-    unwantedSelectors.forEach((selector) => {
-      const elements = tempDiv.querySelectorAll(selector);
-      elements.forEach((el) => el.remove());
+    // Clean residual elements
+    const wrappers = tempDiv.querySelectorAll(
+      ".woobt-wrap, .ts-summary-custom-content"
+    );
+    wrappers.forEach((wrapper) => {
+      if (wrapper.innerHTML.trim() === "") wrapper.remove();
     });
 
-    return removePhoneplace(tempDiv.innerHTML);
-  };
+    // Remove empty divs
+    const emptyDivs = tempDiv.querySelectorAll("div");
+    emptyDivs.forEach((div) => {
+      if (div.innerHTML.trim() === "") div.remove();
+    });
 
-  const processAllData = (data: ProductData): ProductData => {
-    return {
-      ...data,
-      title: data.title ? removePhoneplace(data.title) : undefined,
-      short_description: processDescription(data.short_description),
-      long_description: processDescription(data.long_description),
-      features: data.features ? data.features.map(removePhoneplace) : undefined,
-    };
+    return tempDiv.innerHTML;
   };
 
   useEffect(() => {
     if (initialData) {
-      // Process the initial data
-      const processedData = processAllData(initialData);
+      const processedData = {
+        ...initialData,
+        short_description: processDescription(initialData.short_description),
+        long_description: processDescription(initialData.long_description),
+        features: initialData.features?.map(processDescription),
+      };
       setData(processedData);
     }
   }, [initialData]);
@@ -90,6 +82,7 @@ export default function Results({ data: initialData }: ResultsProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(uploadData),
       });
+
       const result = await response.json();
       if (response.ok) {
         setUploadResult(`Product uploaded successfully! ID: ${result.id}`);
@@ -162,8 +155,8 @@ export default function Results({ data: initialData }: ResultsProps) {
                   <Image
                     src={img || "/placeholder.svg"}
                     alt={`Product image ${index + 1}`}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    style={{ objectFit: "cover" }}
                     className="rounded-lg"
                   />
                 </div>
@@ -177,7 +170,7 @@ export default function Results({ data: initialData }: ResultsProps) {
       <Button
         onClick={handleUpload}
         disabled={uploading}
-        className="mt-6 bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors"
+        className="mt-6 bg-green-500 hover:bg-green-600 text-white"
       >
         {uploading ? "Uploading..." : "Upload to WooCommerce"}
       </Button>

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     console.log("WooCommerce API response:", response.data);
 
     return NextResponse.json(response.data);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error uploading product:", error);
 
     if (error.response && error.response.data) {
