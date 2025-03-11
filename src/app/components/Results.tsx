@@ -25,16 +25,6 @@ export default function Results({ data: initialData }: ResultsProps) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadResult, setUploadResult] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (initialData) {
-      // Process the initial data
-      const processedData = processAllData(initialData);
-      setData(processedData);
-    }
-  }, [initialData]);
-
-  if (!data) return null;
-
   const removePhoneplace = (str: string) =>
     str.replace(/phoneplace/gi, "").trim();
 
@@ -67,6 +57,16 @@ export default function Results({ data: initialData }: ResultsProps) {
       features: data.features ? data.features.map(removePhoneplace) : undefined,
     };
   };
+
+  useEffect(() => {
+    if (initialData) {
+      // Process the initial data
+      const processedData = processAllData(initialData);
+      setData(processedData);
+    }
+  }, [initialData]);
+
+  if (!data) return null;
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData((prevData) => ({
