@@ -10,6 +10,13 @@ interface ScrapeData {
   features?: string[];
 }
 
+// Add a helper function to replace phoneplace references in the scrape route
+const replacePhoneplaceReferences = (html?: string): string => {
+  if (!html) return "";
+  // Replace all occurrences of phoneplace or phoneplacekenya with almuritech.com (case insensitive)
+  return html.replace(/phoneplacekenya|phoneplace/gi, "almuritech.com");
+};
+
 export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json();
@@ -29,10 +36,20 @@ export async function POST(request: NextRequest) {
       if (shortDescElement) {
         // Remove specified elements
         shortDescElement.querySelector(".cats-link")?.remove();
-        shortDescElement.querySelector(".product_title .entry-title")?.remove();
+        shortDescElement.querySelector(".product_title.entry-title")?.remove();
+        shortDescElement.querySelector("h1.product_title")?.remove(); // Alternative selector for the title
         shortDescElement.querySelector(".ts-product-ratings-stock")?.remove();
         shortDescElement.querySelector(".ts-summary-custom-content")?.remove();
         shortDescElement.querySelector("form")?.remove();
+
+        // Remove price element
+        shortDescElement.querySelector(".price")?.remove();
+        shortDescElement.querySelector("p.price")?.remove(); // Alternative selector for price
+
+        // Remove SKU and Tags
+        shortDescElement.querySelector(".meta-content")?.remove();
+        shortDescElement.querySelector(".sku-wrapper")?.remove();
+        shortDescElement.querySelector(".tags-link")?.remove();
 
         // Clean up empty parent elements
         const cleanElements = shortDescElement.querySelectorAll(
@@ -74,6 +91,13 @@ export async function POST(request: NextRequest) {
         features,
       };
     });
+
+    // Apply the replacement to all HTML content
+    data.short_description = replacePhoneplaceReferences(
+      data.short_description
+    );
+    data.long_description = replacePhoneplaceReferences(data.long_description);
+    data.features = data.features?.map(replacePhoneplaceReferences);
 
     await browser.close();
     return NextResponse.json(data);

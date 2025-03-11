@@ -26,8 +26,15 @@ export default function Results({ data: initialData }: ResultsProps) {
 
   const processDescription = (description?: string) => {
     if (!description) return "";
+
+    // First replace phoneplace/phoneplacekenya with almuritech.com
+    const processed = description.replace(
+      /phoneplacekenya|phoneplace/gi,
+      "almuritech.com"
+    );
+
     const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = description;
+    tempDiv.innerHTML = processed;
 
     // Clean residual elements
     const wrappers = tempDiv.querySelectorAll(
