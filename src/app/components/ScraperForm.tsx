@@ -1,12 +1,16 @@
-import { type } from "os";
-import { useState } from "react";
-import { input } from "zod";
+"use client";
 
-export default function ScraperForm({ onScrape }) {
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
+import { useState, type FormEvent } from "react";
 
-  const handleSubmit = async (e) => {
+interface ScraperFormProps {
+  onScrape: (data: any) => void;
+}
+
+export default function ScraperForm({ onScrape }: ScraperFormProps) {
+  const [url, setUrl] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
