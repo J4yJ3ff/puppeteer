@@ -103,7 +103,7 @@ export default function ScraperForm({
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/product"
+              placeholder="https://www.esscobathware.com/product/example"
               required={!isScraped}
               disabled={isScraped}
               className="w-full"

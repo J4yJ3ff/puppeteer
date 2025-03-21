@@ -1,109 +1,90 @@
-import { type NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import { type NextRequest, NextResponse } from "next/server"
+import puppeteer from "puppeteer"
 
 interface ScrapeData {
-  title?: string;
-  price?: string;
-  category?: string;
-  short_description?: string;
-  long_description?: string;
-  images?: string[];
-  features?: string[];
+  title?: string
+  price?: string
+  code?: string
+  range?: string
+  short_description?: string
+  long_description?: string
+  images?: string[]
+  features?: string[]
+  technical_details?: Record<string, string>
 }
-
-// Replace any references to nemsiholdings with almuritech
-const replaceReferences = (html?: string): string => {
-  if (!html) return "";
-  // Replace all occurrences of nemsiholdings with almuritech.com (case insensitive)
-  return html.replace(/nemsiholdings\.co\.ke/gi, "almuritech.com");
-};
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json();
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
+    const { url } = await request.json()
+    const browser = await puppeteer.launch({ headless: "new" })
+    const page = await browser.newPage()
 
-    await page.goto(url, { waitUntil: "networkidle2" });
+    await page.goto(url, { waitUntil: "networkidle2" })
 
     const data: ScrapeData = await page.evaluate(() => {
-      const title = document
-        .querySelector(".product_title.entry-title")
-        ?.textContent?.trim();
+      // Get product title
+      const title = document.querySelector(".signle-product-title")?.textContent?.trim()
 
       // Get price - remove currency symbol if needed
-      const priceElement = document.querySelector(
-        ".price .woocommerce-Price-amount"
-      );
-      const price = priceElement?.textContent?.trim();
+      const priceElement = document.querySelector(".price-special")
+      const price = priceElement?.textContent?.trim()
 
-      // Get category
-      const categoryElement = document.querySelector(".posted_in a");
-      const category = categoryElement?.textContent?.trim();
+      // Get product code
+      const codeElement = document.querySelector(".product-modal-name")
+      const code = codeElement?.textContent?.trim()
 
-      // Process short description
-      const shortDescElement = document.querySelector(".summary.entry-summary");
-      if (shortDescElement) {
-        // Remove specified elements
-        shortDescElement.querySelector(".product_title.entry-title")?.remove();
-        shortDescElement.querySelector(".price")?.remove();
-        shortDescElement.querySelector("form")?.remove();
-        shortDescElement.querySelector(".product_meta")?.remove();
-        shortDescElement.querySelector(".woocommerce-multi-currency")?.remove();
-      }
-      const short_description = shortDescElement?.innerHTML?.trim();
+      // Get product range
+      const rangeElement = document.querySelector(".product-range-name")
+      const range = rangeElement?.textContent?.trim()
 
-      // Get long description
-      const long_description = document
-        .querySelector("#tab-description")
-        ?.innerHTML?.trim();
+      // Get short description
+      const shortDescElement = document.querySelector(".product-description-name")
+      const short_description = shortDescElement?.innerHTML?.trim()
 
       // Get all product images
-      const images = Array.from(
-        document.querySelectorAll(
-          ".woocommerce-product-gallery__image img, #tab-description img"
-        )
-      )
-        .map((img) => (img as HTMLImageElement).src)
-        .filter((src) => src && !src.includes("placeholder"));
+      const images = Array.from(document.querySelectorAll(".product-thumbnail-link"))
+        .map((link) => (link as HTMLAnchorElement).href)
+        .filter((src) => src && !src.includes("placeholder"))
 
-      // Get features if available
-      const features: string[] = [];
-      const descriptionText =
-        document.querySelector("#tab-description")?.textContent;
-      if (descriptionText) {
-        // Extract features from description if they exist
-        const featuresList = document.querySelector("#tab-description ul");
-        if (featuresList) {
-          Array.from(featuresList.querySelectorAll("li")).forEach((li) => {
-            const text = li.textContent?.trim();
-            if (text) features.push(text);
-          });
+      // Add main image if it exists
+      const mainImage = document.querySelector(".main-image") as HTMLAnchorElement
+      if (mainImage && mainImage.href) {
+        if (!images.includes(mainImage.href)) {
+          images.unshift(mainImage.href)
         }
+      }
+
+      // Get technical details if available
+      const technical_details: Record<string, string> = {}
+
+      // Get features from description if they exist
+      const features: string[] = []
+      const descriptionText = document.querySelector(".product-description-name")?.textContent
+      if (descriptionText) {
+        // Split by newlines or commas if it contains a list-like structure
+        const lines = descriptionText.split(/[,\n]+/)
+        lines.forEach((line) => {
+          const trimmed = line.trim()
+          if (trimmed) features.push(trimmed)
+        })
       }
 
       return {
         title,
         price,
-        category,
+        code,
+        range,
         short_description,
-        long_description,
         images,
         features,
-      };
-    });
+        technical_details,
+      }
+    })
 
-    // Apply the replacement to all HTML content
-    data.short_description = replaceReferences(data.short_description);
-    data.long_description = replaceReferences(data.long_description);
-    data.features = data.features?.map(replaceReferences);
-
-    await browser.close();
-    return NextResponse.json(data);
+    await browser.close()
+    return NextResponse.json(data)
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 })
   }
 }
+
