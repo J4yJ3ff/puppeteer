@@ -3,7 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 interface ScraperFormProps {
   onScrape: (data: any) => void;
@@ -58,17 +64,11 @@ export default function ScraperForm({
     } else {
       // Upload mode
       try {
-        const uploadData = {
-          ...scrapedData,
-          price: scrapedData.price
-            ? scrapedData.price.replace(/[^0-9.]/g, "")
-            : "",
-        };
-
+        // We're not modifying the price here anymore since we're not uploading it
         const response = await fetch("/api/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(uploadData),
+          body: JSON.stringify(scrapedData),
         });
 
         const result = await response.json();
@@ -95,6 +95,9 @@ export default function ScraperForm({
     <Card>
       <CardHeader>
         <CardTitle>Enter Product URL</CardTitle>
+        <CardDescription>
+          Products will be uploaded with the Essco brand and no price
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

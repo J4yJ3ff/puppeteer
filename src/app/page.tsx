@@ -25,7 +25,9 @@ export default function Home() {
 
   return (
     <main className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8 text-center">Product Scraper</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Essco Bathware Product Scraper
+      </h1>
       <div className="space-y-8">
         <ScraperForm
           onScrape={handleScrape}
